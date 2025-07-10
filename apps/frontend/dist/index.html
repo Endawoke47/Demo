@@ -30,6 +30,42 @@
         display: none !important;
       }
     </style>
+    
+    <!-- JavaScript to dynamically remove profile buttons -->
+    <script>
+      // Function to remove orange profile buttons
+      function removeOrangeButtons() {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+          const style = button.getAttribute('style') || '';
+          const text = button.textContent || '';
+          
+          // Check for orange background or John Doe text
+          if (style.includes('background: orange') || 
+              style.includes('background-color: orange') ||
+              style.includes('z-index: 999999') ||
+              text.includes('John Doe') ||
+              text.includes('⚡') ||
+              text.includes('▼')) {
+            button.style.display = 'none';
+            button.remove();
+          }
+        });
+      }
+      
+      // Run immediately and on DOM changes
+      document.addEventListener('DOMContentLoaded', removeOrangeButtons);
+      
+      // Observer for dynamically added buttons
+      const observer = new MutationObserver(removeOrangeButtons);
+      observer.observe(document.body, { 
+        childList: true, 
+        subtree: true 
+      });
+      
+      // Run every 500ms to catch any persistent buttons
+      setInterval(removeOrangeButtons, 500);
+    </script>
   </head>
   <body>
     <div id="root"></div>
