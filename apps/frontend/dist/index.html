@@ -11,7 +11,7 @@
     <link rel="modulepreload" crossorigin href="/assets/utils-BvbvLpEs.js">
     <link rel="modulepreload" crossorigin href="/assets/ui-Bd36tDX2.js">
     <link rel="stylesheet" crossorigin href="/assets/index-CzkEvb5I.css">
-    <!-- Custom CSS to hide redundant profile button -->
+    <!-- Custom CSS to hide redundant profile button and enhance sidebar -->
     <style>
       /* Hide orange/yellow profile buttons with high z-index */
       button[style*="background: orange"],
@@ -29,9 +29,38 @@
       button[style*="position: absolute"][style*="z-index"] {
         display: none !important;
       }
+      
+      /* Sidebar enhancement styles */
+      [class*="sidebar"], nav, aside {
+        transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out !important;
+      }
+      
+      /* Logo cursor enhancement */
+      [class*="logo"], [class*="brand"] {
+        cursor: pointer !important;
+      }
+      
+      /* Smooth transitions for sidebar elements */
+      [class*="sidebar"] * {
+        transition: opacity 0.2s ease-in-out !important;
+      }
+      
+      /* Ensure expanded sidebar content is visible */
+      .sidebar-expanded {
+        width: 320px !important;
+        min-width: 320px !important;
+        max-width: 320px !important;
+      }
+      
+      /* Smooth text reveal */
+      .sidebar-text-reveal {
+        opacity: 1 !important;
+        display: inline-block !important;
+        visibility: visible !important;
+      }
     </style>
     
-    <!-- JavaScript to dynamically remove profile buttons -->
+    <!-- JavaScript to dynamically remove profile buttons and handle sidebar -->
     <script>
       // Function to remove orange profile buttons
       function removeOrangeButtons() {
@@ -53,11 +82,230 @@
         });
       }
       
-      // Run immediately and on DOM changes
-      document.addEventListener('DOMContentLoaded', removeOrangeButtons);
+      // Function to handle sidebar restore functionality
+      function setupSidebarRestore() {
+        // Wait for DOM to be ready
+        setTimeout(() => {
+          // Look for CF logo elements (comprehensive search)
+          const logoSelectors = [
+            'img[alt*="CF"]', 
+            'img[alt*="CounselFlow"]', 
+            'img[src*="logo"]', 
+            'div[class*="logo"]', 
+            'span[class*="logo"]',
+            'h1[class*="logo"]',
+            'div[class*="brand"]',
+            'span[class*="brand"]',
+            'a[class*="brand"]',
+            '[class*="sidebar"] img',
+            '[class*="nav"] img',
+            '[class*="header"] img',
+            'svg[class*="logo"]',
+            '[data-testid*="logo"]'
+          ];
+          
+          const possibleLogos = document.querySelectorAll(logoSelectors.join(', '));
+          
+          // Also look for text elements containing "CF" or "CounselFlow"
+          const textElements = document.querySelectorAll('h1, h2, h3, span, div, a, button');
+          const logoElements = [];
+          
+          textElements.forEach(el => {
+            const text = el.textContent || '';
+            const cleanText = text.trim().toLowerCase();
+            
+            // More specific criteria for logo elements
+            if ((cleanText === 'cf' || cleanText.includes('counselflow') || 
+                 cleanText.includes('counsel flow') || cleanText.includes('counsel')) && 
+                text.length < 50) {
+              logoElements.push(el);
+            }
+          });
+          
+          // Combine all possible logo elements
+          const allLogos = [...possibleLogos, ...logoElements];
+          
+          allLogos.forEach(logo => {
+            if (logo && !logo.dataset.sidebarHandlerAdded) {
+              logo.dataset.sidebarHandlerAdded = 'true';
+              logo.style.cursor = 'pointer';
+              logo.title = 'Click to expand/restore sidebar';
+              
+              logo.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('CF Logo clicked - attempting to restore sidebar');
+                
+                // Find sidebar elements with multiple strategies
+                const sidebarSelectors = [
+                  '[class*="sidebar"]',
+                  '[class*="nav"]',
+                  '[class*="drawer"]',
+                  '[class*="menu"]',
+                  '[data-testid*="sidebar"]',
+                  '[id*="sidebar"]',
+                  '[id*="nav"]',
+                  'nav',
+                  'aside'
+                ];
+                
+                let sidebar = null;
+                
+                // Strategy 1: Find by common selectors
+                for (const selector of sidebarSelectors) {
+                  const elements = document.querySelectorAll(selector);
+                  for (const el of elements) {
+                    const rect = el.getBoundingClientRect();
+                    const computedStyle = window.getComputedStyle(el);
+                    
+                    // Check if this element looks like a sidebar
+                    if (rect.height > 100 && 
+                        (rect.width < 400) &&
+                        (rect.left <= 100 || computedStyle.left === '0px' || computedStyle.position === 'fixed')) {
+                      sidebar = el;
+                      break;
+                    }
+                  }
+                  if (sidebar) break;
+                }
+                
+                // Strategy 2: Look for the closest parent that might be a sidebar
+                if (!sidebar) {
+                  let current = logo.parentElement;
+                  while (current && current !== document.body) {
+                    const rect = current.getBoundingClientRect();
+                    if (rect.height > 200 && rect.width < 400 && rect.left <= 100) {
+                      sidebar = current;
+                      break;
+                    }
+                    current = current.parentElement;
+                  }
+                }
+                
+                // Strategy 3: Look for elements with Tailwind width classes
+                if (!sidebar) {
+                  const possibleSidebars = document.querySelectorAll('[class*="w-16"], [class*="w-20"], [class*="w-64"], [class*="w-72"], [class*="w-80"]');
+                  for (const el of possibleSidebars) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.height > 200 && rect.left <= 100) {
+                      sidebar = el;
+                      break;
+                    }
+                  }
+                }
+                
+                if (sidebar) {
+                  console.log('Sidebar found:', sidebar);
+                  
+                  // Check if sidebar is minimized
+                  const currentWidth = sidebar.getBoundingClientRect().width;
+                  const isMinimized = currentWidth < 100;
+                  
+                  console.log('Current sidebar width:', currentWidth, 'Is minimized:', isMinimized);
+                  
+                  if (isMinimized) {
+                    // Remove minimized classes
+                    const minimizedClasses = ['w-16', 'w-20', 'lg:w-16', 'lg:w-20', 'w-12', 'w-14'];
+                    minimizedClasses.forEach(cls => sidebar.classList.remove(cls));
+                    
+                    // Add expanded classes
+                    const expandedClasses = ['w-64', 'w-72', 'w-80', 'lg:w-64', 'lg:w-72', 'lg:w-80'];
+                    let classAdded = false;
+                    
+                    // Try to add the most appropriate expanded class
+                    for (const widthClass of expandedClasses) {
+                      if (!sidebar.classList.contains(widthClass)) {
+                        sidebar.classList.add(widthClass);
+                        classAdded = true;
+                        break;
+                      }
+                    }
+                    
+                    // Fallback to inline styles
+                    if (!classAdded) {
+                      sidebar.style.width = '320px';
+                      sidebar.style.minWidth = '320px';
+                      sidebar.classList.add('sidebar-expanded');
+                    }
+                    
+                    // Apply smooth transition
+                    sidebar.style.transition = 'width 0.3s ease-in-out, min-width 0.3s ease-in-out';
+                    
+                    // Show hidden text elements
+                    const hiddenTexts = sidebar.querySelectorAll('[class*="hidden"], [class*="opacity-0"], [style*="display: none"]');
+                    hiddenTexts.forEach(el => {
+                      el.classList.remove('hidden', 'opacity-0');
+                      el.classList.add('opacity-100', 'sidebar-text-reveal');
+                      if (el.style.display === 'none') {
+                        el.style.display = '';
+                      }
+                    });
+                    
+                    // Show text content that might be hidden in minimized state
+                    const spans = sidebar.querySelectorAll('span, p, div');
+                    spans.forEach(el => {
+                      if (el.textContent && el.textContent.trim().length > 0) {
+                        el.classList.add('sidebar-text-reveal');
+                      }
+                    });
+                    
+                    console.log('Sidebar expanded successfully');
+                    
+                    // Show success feedback
+                    const feedback = document.createElement('div');
+                    feedback.textContent = 'Sidebar expanded!';
+                    feedback.style.cssText = `
+                      position: fixed;
+                      top: 20px;
+                      right: 20px;
+                      background: #22c55e;
+                      color: white;
+                      padding: 12px 16px;
+                      border-radius: 8px;
+                      z-index: 9999;
+                      font-size: 14px;
+                      font-weight: 500;
+                      opacity: 0;
+                      transform: translateX(100%);
+                      transition: all 0.3s ease;
+                    `;
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(() => {
+                      feedback.style.opacity = '1';
+                      feedback.style.transform = 'translateX(0)';
+                    }, 100);
+                    
+                    setTimeout(() => {
+                      feedback.style.opacity = '0';
+                      feedback.style.transform = 'translateX(100%)';
+                      setTimeout(() => feedback.remove(), 300);
+                    }, 3000);
+                    
+                  } else {
+                    console.log('Sidebar is already expanded');
+                  }
+                } else {
+                  console.log('No sidebar found');
+                }
+              });
+            }
+          });
+        }, 500); // Reduced wait time
+      }
       
-      // Observer for dynamically added buttons
-      const observer = new MutationObserver(removeOrangeButtons);
+      // Run immediately and on DOM changes
+      document.addEventListener('DOMContentLoaded', () => {
+        removeOrangeButtons();
+        setupSidebarRestore();
+      });
+      
+      // Observer for dynamically added buttons and elements
+      const observer = new MutationObserver(() => {
+        removeOrangeButtons();
+        setupSidebarRestore();
+      });
       observer.observe(document.body, { 
         childList: true, 
         subtree: true 
@@ -65,6 +313,9 @@
       
       // Run every 500ms to catch any persistent buttons
       setInterval(removeOrangeButtons, 500);
+      
+      // Run sidebar setup every 2 seconds to handle dynamic content
+      setInterval(setupSidebarRestore, 2000);
     </script>
   </head>
   <body>
