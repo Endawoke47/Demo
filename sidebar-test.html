@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar Restore Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-16 bg-white shadow-lg transition-all duration-300 ease-in-out">
+            <div class="p-4">
+                <!-- CF Logo -->
+                <div class="flex items-center mb-6">
+                    <div class="bg-teal-600 text-white rounded-lg p-2">
+                        <span class="text-xl font-bold">CF</span>
+                    </div>
+                    <span class="ml-2 text-gray-800 hidden sidebar-text">CounselFlow</span>
+                </div>
+                
+                <!-- Navigation items -->
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                        <span class="text-xl">📊</span>
+                        <span class="ml-3 hidden sidebar-text">Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                        <span class="text-xl">⚖️</span>
+                        <span class="ml-3 hidden sidebar-text">Cases</span>
+                    </a>
+                    <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-gray-100">
+                        <span class="text-xl">📋</span>
+                        <span class="ml-3 hidden sidebar-text">Contracts</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 p-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Sidebar Restore Test</h1>
+            <p class="text-gray-600 mb-4">Click the CF logo to expand the sidebar when it's minimized.</p>
+            
+            <button onclick="minimizeSidebar()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Minimize Sidebar
+            </button>
+            
+            <div class="mt-8 p-6 bg-white rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Test Instructions:</h2>
+                <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                    <li>Click "Minimize Sidebar" to make the sidebar narrow</li>
+                    <li>Click the CF logo in the sidebar to expand it</li>
+                    <li>You should see the sidebar expand with smooth animation</li>
+                    <li>Text labels should appear when expanded</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function minimizeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const textElements = document.querySelectorAll('.sidebar-text');
+            
+            sidebar.classList.remove('w-64', 'w-72', 'w-80');
+            sidebar.classList.add('w-16');
+            
+            textElements.forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+        
+        // CF Logo click handler (similar to our implementation)
+        document.addEventListener('DOMContentLoaded', function() {
+            const cfLogo = document.querySelector('.bg-teal-600');
+            
+            if (cfLogo) {
+                cfLogo.style.cursor = 'pointer';
+                cfLogo.title = 'Click to expand sidebar';
+                
+                cfLogo.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const sidebar = document.getElementById('sidebar');
+                    const textElements = document.querySelectorAll('.sidebar-text');
+                    
+                    if (sidebar.classList.contains('w-16')) {
+                        // Expand sidebar
+                        sidebar.classList.remove('w-16');
+                        sidebar.classList.add('w-64');
+                        
+                        textElements.forEach(el => {
+                            el.classList.remove('hidden');
+                        });
+                        
+                        // Show feedback
+                        const feedback = document.createElement('div');
+                        feedback.textContent = 'Sidebar expanded!';
+                        feedback.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+                        document.body.appendChild(feedback);
+                        
+                        setTimeout(() => {
+                            feedback.remove();
+                        }, 3000);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
